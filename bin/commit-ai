@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env bundle exec ruby
 
 require "httparty"
 require "dotenv"
@@ -28,7 +28,7 @@ end
 
 diff = `git diff --cached`
 if diff.empty?
-  puts "⚠️ No staged changes found. Use 'git add' first."
+  puts "⚠️  No staged changes found. Use 'git add' first."
   exit 1
 end
 
@@ -43,5 +43,5 @@ print "Do you want to commit with this message? (y/n): "
 if STDIN.gets.chomp.downcase == "y"
   system("git commit -m \"#{message}\"")
 else
-  puts "❌ Commit canceled."
+  puts "❌  Commit canceled."
 end
