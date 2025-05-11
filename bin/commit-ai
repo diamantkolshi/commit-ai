@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+require "httparty"
+require "dotenv"
+Dotenv.load
+
+OPENAI_API_KEY = ENV["OPENAI_API_KEY"]
+
+def generate_commit_message(diff)
+  response = HTTParty.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers: {
+      "Authorization" => "Bearer #{OPENAI_API_KEY}",
+      "Content-Type" => "application/json"
+    },
+    body: {
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are a helpful assistant that writes clear and conventional git commit messages." },
+        { role: "user", content: "Generate a git commit message for the following staged changes:\n\n#{diff}" }
+      ],
+      temperature: 0.5
+    }.to_json
+  )
+
+  response["choices"][0]["message"]["content"].strip
+end
+
+diff = `git diff --cached`
+if diff.empty?
+  puts "⚠️ No staged changes found. Use 'git add' first."
+  exit 1
+end
+
+message = generate_commit_message(diff)
+
+puts "\n💬 Suggested commit message:"
+puts "-" * 50
+puts message
+puts "-" * 50
+print "Do you want to commit with this message? (y/n): "
+
+if STDIN.gets.chomp.downcase == "y"
+  system("git commit -m \"#{message}\"")
+else
+  puts "❌ Commit canceled."
+end
