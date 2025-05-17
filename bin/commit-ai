@@ -3,6 +3,7 @@
 require "httparty"
 require "dotenv"
 require "json"
+require "pry"
 Dotenv.load
 
 OPENAI_API_KEY = ENV["OPENAI_API_KEY"]
@@ -24,7 +25,13 @@ def generate_commit_message(diff)
     }.to_json
   )
 
-  response["choices"][0]["message"]["content"].strip
+  if response.code != 200
+    puts "❌ OpenAI API Error (#{response.code}):"
+    puts response.body
+    exit 1
+  end
+
+  response.dig("choices", 0, "message", "content")&.strip || "No message generated."
 end
 
 diff = `git diff --cached`
@@ -46,3 +53,9 @@ if STDIN.gets.chomp.downcase == "y"
 else
   puts "❌  Commit canceled."
 end
+
+
+# ls -l /Users/diamantkolshi/.cli-tools/commit-ai/bin
+# chmod +x /Users/diamantkolshi/.cli-tools/commit-ai/bin/commit-ai
+# sudo ln -sf /Users/diamantkolshi/.cli-tools/commit-ai/bin/commit-ai /usr/local/bin/commit-ai
+# commit-ai
